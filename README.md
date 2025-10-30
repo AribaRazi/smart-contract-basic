@@ -3,9 +3,8 @@
 
 A beginner-friendly Move smart contract that enables users to create wallets, deposit virtual tokens, and send payments securely on the Aptos blockchain.
 
-## ✅ Deployment Screenshot
 
-![Deployed Contract Screenshot](https://github.com/user-attachments/assets/afd13047-f32d-4706-b334-6e24140be35f)
+<img width="1920" height="1080" alt="Screenshot (126)" src="https://github.com/user-attachments/assets/a2f15906-fbe8-4fc8-86a2-6ab93580af48" />
 
 
 
