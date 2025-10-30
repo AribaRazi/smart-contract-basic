@@ -1,4 +1,3 @@
-````markdown
 # 💰 SimplePayment Smart Contract
 
 A beginner-friendly Move smart contract that enables users to create wallets, deposit virtual tokens, and send payments securely on the Aptos blockchain.
@@ -150,5 +149,4 @@ This project is released under the [MIT License](LICENSE).
 
 ---
 
-```
 ```
