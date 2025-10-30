@@ -5,7 +5,6 @@ A basic **Move smart contract** that allows users to create wallets, deposit fun
 
 <img width="1920" height="1080" alt="Screenshot (122)" src="https://github.com/user-attachments/assets/fe4bd9bf-4391-49cf-ba70-121bde78c06d" />
 
-
 ## 📘 Overview
 
 The **SimplePayment** module implements a lightweight wallet system where:
