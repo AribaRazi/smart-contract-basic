@@ -1,111 +1,152 @@
-```markdown
-# 💸 SimplePayment Smart Contract (Move Language)
+````markdown
+# 💰 SimplePayment Smart Contract
 
-A basic **Move smart contract** that allows users to create wallets, deposit funds, and send payments between accounts securely.
+A beginner-friendly Move smart contract that enables users to create wallets, deposit virtual tokens, and send payments securely on the Aptos blockchain.
 
-<img width="900" alt="SimplePayment Screenshot" src="https://github.com/user-attachments/assets/0xe55256d1a7e778513bc13f1ae7e76314382e8237b39778a28ac684c7bef1d11a" />
+<img width="1920" height="1080" alt="Screenshot (126)" src="https://github.com/user-attachments/assets/afd13047-f32d-4706-b334-6e24140be35f" />
 
 
+## 🚀 Project Description
 
-## 📘 Overview
+**SimplePayment** is a decentralized wallet system written in the Move language.  
+Each user can:
+- Create their personal wallet.
+- Deposit coins into it.
+- Send coins to another user’s wallet.
+- Check their balance anytime.
 
-The **SimplePayment** module implements a lightweight wallet system where:
-- Each user can create their own wallet.
-- Users can deposit funds into their wallet.
-- Users can send payments to other wallets.
-- Anyone can check a wallet’s balance.
-
-This contract demonstrates **fund transfers**, **Move resource management**, and **error handling** in the Move language.
-
----
-
-## 🚀 Features
-
-- 🏦 **Create Wallet:** Initializes a wallet for any user (required before use).  
-- 💰 **Deposit:** Add funds to your wallet balance.  
-- 🔁 **Send Payment:** Transfer funds to another user’s wallet.  
-- 📊 **Check Balance:** View the balance of any wallet.  
-- ✅ **Built-in Test:** Includes a test function (`test_payment`) that verifies deposits and transfers.
+This contract is ideal for learning how to manage on-chain storage and resources using Move.
 
 ---
 
-## ⚙️ Functions
+## 🧩 Features
 
-### `create_wallet(account: &signer)`
-Creates a wallet for the account if one doesn’t already exist.
-
----
-
-### `deposit(account: &signer, amount: u64)`
-Deposits a specific amount into the user’s wallet.
+- 🏦 **Create Wallet:** Initializes a new wallet for each user.  
+- 💸 **Deposit Funds:** Add coins to your wallet balance.  
+- 🔁 **Send Coins:** Transfer funds to another user's wallet.  
+- 📊 **Check Balance:** View your current wallet balance.  
+- 🧪 **Test Function:** Built-in test case to verify wallet creation, deposit, and transfer logic.
 
 ---
 
-### `send(sender: &signer, receiver: address, amount: u64)`
-Sends coins from one wallet to another.  
-- Aborts with `E_NOT_ENOUGH_BALANCE` if the sender has insufficient funds.  
-- Aborts with `E_RECEIVER_NOT_READY` if the receiver doesn’t have a wallet.
-
----
-
-### `get_balance(addr: address): u64`
-Returns the balance of the specified wallet.  
-Returns `0` if the wallet doesn’t exist.
-
----
-
-## 🧪 Test Function
-
-### `test_payment(user1: signer, user2: signer)`
-A simple unit test:
-1. Creates wallets for `user1` and `user2`.
-2. Deposits `100` coins to `user1`.
-3. Sends `40` coins from `user1` to `user2`.
-4. Verifies resulting balances:  
-   - `user1` → `60`  
-   - `user2` → `40`
-
----
-
-## ⚠️ Error Codes
-
-| Code | Name | Description |
-|------|------|-------------|
-| `1` | `E_NOT_ENOUGH_BALANCE` | Sender’s wallet does not have enough funds. |
-| `2` | `E_RECEIVER_NOT_READY` | Receiver has not created a wallet yet. |
-
----
-
-## 📍 Module Address
-```
-
-0xf40aa9684befc2d71929527fa8722114c08cbfa91364d8caaaad78ec79c2de45::SimplePayment
-
-````
-
----
-
-## 🧩 Example Usage
+## 🧠 Smart Contract Code
 
 ```move
-// Create your wallet
-SimplePayment::create_wallet(&account);
+module 0xf40aa9684befc2d71929527fa8722114c08cbfa91364d8caaaad78ec79c2de45::SimplePayment {
 
-// Deposit 100 units
-SimplePayment::deposit(&account, 100);
+    use std::signer;
 
-// Send 40 units to another user
-SimplePayment::send(&account, @0x2222, 40);
+    const E_NOT_ENOUGH_BALANCE: u64 = 1;
+    const E_RECEIVER_NOT_READY: u64 = 2;
 
-// Check balance
-let balance = SimplePayment::get_balance(@0x1111);
+    struct Wallet has key {
+        balance: u64,
+    }
+
+    public entry fun create_wallet(account: &signer) {
+        let user = signer::address_of(account);
+        if (!exists<Wallet>(user)) {
+            let wallet = Wallet { balance: 0 };
+            move_to(account, wallet);
+        };
+    }
+
+    public entry fun deposit(account: &signer, amount: u64) acquires Wallet {
+        let user = signer::address_of(account);
+        let wallet = borrow_global_mut<Wallet>(user);
+        wallet.balance = wallet.balance + amount;
+    }
+
+    public entry fun send(
+        sender: &signer,
+        receiver: address,
+        amount: u64
+    ) acquires Wallet {
+        let sender_addr = signer::address_of(sender);
+        let sender_wallet = borrow_global_mut<Wallet>(sender_addr);
+
+        if (sender_wallet.balance < amount) {
+            abort E_NOT_ENOUGH_BALANCE;
+        };
+
+        if (!exists<Wallet>(receiver)) {
+            abort E_RECEIVER_NOT_READY;
+        };
+
+        sender_wallet.balance = sender_wallet.balance - amount;
+        let receiver_wallet = borrow_global_mut<Wallet>(receiver);
+        receiver_wallet.balance = receiver_wallet.balance + amount;
+    }
+
+    #[view]
+    public fun get_balance(addr: address): u64 acquires Wallet {
+        if (!exists<Wallet>(addr)) {
+            return 0
+        };
+        borrow_global<Wallet>(addr).balance
+    }
+
+    #[test(user1 = @0x1111, user2 = @0x2222)]
+    public entry fun test_payment(user1: signer, user2: signer) acquires Wallet {
+        create_wallet(&user1);
+        create_wallet(&user2);
+        deposit(&user1, 100);
+        send(&user1, signer::address_of(&user2), 40);
+        let b1 = get_balance(signer::address_of(&user1));
+        let b2 = get_balance(signer::address_of(&user2));
+        assert!(b1 == 60, 0);
+        assert!(b2 == 40, 0);
+    }
+}
 ````
 
 ---
 
-## 📜 License
+## 🌐 Deployment Details
 
-This project is open-source and available for educational and demonstration purposes.
+* **Deployed Address:**
+  `0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40`
+
+* **Explorer Link:**
+  [View on Aptos Explorer](https://explorer.aptoslabs.com/txn/0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40/changes?network=testnet)
+
+* **Network:** Aptos Testnet
+
+---
+
+## 🛠️ How to Use
+
+1. **Create Wallet**
+
+   ```bash
+   aptos move run --function-id 0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40::SimplePayment::create_wallet
+   ```
+
+2. **Deposit Funds**
+
+   ```bash
+   aptos move run --function-id 0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40::SimplePayment::deposit --args u64:100
+   ```
+
+3. **Send Coins**
+
+   ```bash
+   aptos move run --function-id 0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40::SimplePayment::send --args address:<receiver_address> u64:50
+   ```
+
+4. **Check Balance**
+
+   ```bash
+   aptos move view --function-id 0x72385f141c3af5a4350fabf809b80f979f575d5d91e521f6d0354eb6cbeebc40::SimplePayment::get_balance --args address:<your_address>
+   ```
+
+---
+
+## 📚 License
+
+This project is released under the [MIT License](LICENSE).
+
+---
 
 ```
 ```
