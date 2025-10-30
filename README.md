@@ -3,7 +3,7 @@
 
 A basic **Move smart contract** that allows users to create wallets, deposit funds, and send payments between accounts securely.
 
-<img width="900" alt="SimplePayment Screenshot" src="https://github.com/user-attachments/assets/0x2aeba9ade63d5d96d56f12a0827efa5110997fadba6ade1e8a98109e7eee5403" />
+<img width="900" alt="SimplePayment Screenshot" src="https://github.com/user-attachments/assets/0xe55256d1a7e778513bc13f1ae7e76314382e8237b39778a28ac684c7bef1d11a" />
 
 
 
