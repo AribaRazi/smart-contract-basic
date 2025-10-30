@@ -1,0 +1,80 @@
+module 0xf40aa9684befc2d71929527fa8722114c08cbfa91364d8caaaad78ec79c2de45::SimplePayment {
+
+    use std::signer;
+
+    const E_NOT_ENOUGH_BALANCE: u64 = 1;
+    const E_RECEIVER_NOT_READY: u64 = 2;
+
+    /// Each user has a simple wallet
+    struct Wallet has key {
+        balance: u64,
+    }
+
+    /// Create your wallet (run this once before using)
+    public entry fun create_wallet(account: &signer) {
+        let user = signer::address_of(account);
+        if (!exists<Wallet>(user)) {
+            let wallet = Wallet { balance: 0 };
+            move_to(account, wallet);
+        };
+    }
+
+    /// Deposit coins into your wallet
+    public entry fun deposit(account: &signer, amount: u64) acquires Wallet {
+        let user = signer::address_of(account);
+        let wallet = borrow_global_mut<Wallet>(user);
+        wallet.balance = wallet.balance + amount;
+    }
+
+    /// Send coins to another user's wallet
+    public entry fun send(
+        sender: &signer,
+        receiver: address,
+        amount: u64
+    ) acquires Wallet {
+        let sender_addr = signer::address_of(sender);
+        let sender_wallet = borrow_global_mut<Wallet>(sender_addr);
+
+        if (sender_wallet.balance < amount) {
+            abort E_NOT_ENOUGH_BALANCE;
+        };
+
+        // make sure receiver already has a wallet
+        if (!exists<Wallet>(receiver)) {
+            abort E_RECEIVER_NOT_READY;
+        };
+
+        // transfer balances
+        sender_wallet.balance = sender_wallet.balance - amount;
+        let receiver_wallet = borrow_global_mut<Wallet>(receiver);
+        receiver_wallet.balance = receiver_wallet.balance + amount;
+    }
+
+    /// Check wallet balance
+    #[view]
+    public fun get_balance(addr: address): u64 acquires Wallet {
+        if (!exists<Wallet>(addr)) {
+            return 0
+        };
+        borrow_global<Wallet>(addr).balance
+    }
+
+    #[test(user1 = @0x1111, user2 = @0x2222)]
+    public entry fun test_payment(user1: signer, user2: signer) acquires Wallet {
+        // Create wallets
+        create_wallet(&user1);
+        create_wallet(&user2);
+
+        // Deposit into user1
+        deposit(&user1, 100);
+
+        // Send 40 to user2
+        send(&user1, signer::address_of(&user2), 40);
+
+        // Check results
+        let b1 = get_balance(signer::address_of(&user1));
+        let b2 = get_balance(signer::address_of(&user2));
+        assert!(b1 == 60, 0);
+        assert!(b2 == 40, 0);
+    }
+}
